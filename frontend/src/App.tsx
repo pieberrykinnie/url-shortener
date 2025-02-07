@@ -25,6 +25,7 @@ function App() {
         setError(data.error);
       } else {
         setShortCode(data.shortCode);
+        setUrl(""); // Clear input after successful submission
       }
     } catch (err) {
       setError("Failed to shorten URL");
@@ -40,14 +41,15 @@ function App() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Enter URL to shorten"
+          aria-label="URL to shorten"
         />
         <button type="submit">Shorten</button>
       </form>
       
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
       {shortCode && (
         <p>
-          Shortened URL: <a href={`http://localhost:3000/${shortCode}`}>
+          Shortened URL: <a href={`http://localhost:3000/${shortCode}`} target="_blank" rel="noopener noreferrer">
             {`http://localhost:3000/${shortCode}`}
           </a>
         </p>
