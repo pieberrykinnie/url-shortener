@@ -1,9 +1,11 @@
 import express from "express";
+import cors from "cors";
 import urlRoutes from "./routes/urlRoutes";
 
 const app: express.Application = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req: express.Request, res: express.Response) => {
