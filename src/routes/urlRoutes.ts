@@ -1,4 +1,6 @@
 import express from "express";
+import prisma from "../prismaClient";
+import { ShortUrl } from "@prisma/client";
 import isUrl from "validator/lib/isURL";
 
 const URL_LENGTH: number = 6;
@@ -26,7 +28,7 @@ function generateRandomString(length: number): string {
     return result;
 }
 
-router.post("/shorten", (req: express.Request, res: express.Response) => {
+router.post("/shorten", async (req: express.Request, res: express.Response) => {
     // Ensure request body contains a URL
     if ("url" in req.body) {
         const originalUrl: string = req.body.url;
@@ -35,13 +37,28 @@ router.post("/shorten", (req: express.Request, res: express.Response) => {
         if (isUrl(originalUrl,
             { require_protocol: true}
         )) {
-            let shortUrl: string = generateRandomString(URL_LENGTH);
+            let shortCode: string;
+            let collision: boolean;
+
             // Prevent collision
-            while (shortUrl in urlMapping) {
-                shortUrl = generateRandomString(URL_LENGTH);
-            }
-            urlMapping[shortUrl] = originalUrl;
-            res.json({ shortUrl });
+            do {
+                shortCode = generateRandomString(URL_LENGTH);
+                collision = (await prisma.shortUrl.findUnique({
+                    where: {
+                        shortCode: shortCode
+                    }
+                })) !== null;
+            } while (collision);
+
+            // Save to database
+            await prisma.shortUrl.create({
+                data: {
+                    shortCode: shortCode,
+                    originalUrl: originalUrl
+                }
+            });
+
+            res.json({ shortCode });
         } else {
             res.status(400).json({ error: "Invalid URL" });
         }
@@ -50,13 +67,17 @@ router.post("/shorten", (req: express.Request, res: express.Response) => {
     }
 });
 
-router.get("/:code", (req: express.Request, res: express.Response) => {
-    const shortUrl: string = req.params.code;
+router.get("/:code", async (req: express.Request, res: express.Response) => {
+    const shortCode: string = req.params.code;
+    const shortUrlRecord: ShortUrl | null = await prisma.shortUrl.findUnique({
+        where: {
+            shortCode: shortCode
+        }
+    });
     
     // Check if the short URL exists in the mapping
-    if (shortUrl in urlMapping) {
-        const originalUrl: string = urlMapping[shortUrl];
-        res.redirect(originalUrl);
+    if (shortUrlRecord !== null) {
+        res.redirect(shortUrlRecord.originalUrl);
     } else {
         res.status(404).json({ error: "Short URL not found" });
     }
