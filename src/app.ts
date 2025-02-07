@@ -2,7 +2,7 @@ import express from "express";
 import urlRoutes from "./routes/urlRoutes";
 
 const app: express.Application = express();
-const PORT: number = 3000;
+const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 app.use(express.json());
 
