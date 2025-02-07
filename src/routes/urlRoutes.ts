@@ -6,13 +6,6 @@ import isUrl from "validator/lib/isURL";
 const URL_LENGTH: number = 6;
 const router: express.Router = express.Router();
 
-// For testing
-interface stringMap {
-    [key: string]: string;
-}
-
-const urlMapping: stringMap = {};
-
 /**
  * Generate a random string of a given length for the shortened URL.
  * 
