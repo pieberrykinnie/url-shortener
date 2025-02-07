@@ -1,4 +1,5 @@
 import express from "express";
+import isUrl from "validator/lib/isURL";
 
 const URL_LENGTH: number = 6;
 const router: express.Router = express.Router();
@@ -22,9 +23,16 @@ function generateRandomString(length: number): string {
 router.post("/shorten", (req: express.Request, res: express.Response) => {
     if ("url" in req.body) {
         const originalUrl: string = req.body.url;
-        const shortUrl: string = generateRandomString(URL_LENGTH);
-        urlMapping[shortUrl] = originalUrl;
-        res.json({ shortUrl });
+
+        if (isUrl(originalUrl,
+            { require_protocol: true}
+        )) {
+            const shortUrl: string = generateRandomString(URL_LENGTH);
+            urlMapping[shortUrl] = originalUrl;
+            res.json({ shortUrl });
+        } else {
+            res.status(400).json({ error: "Invalid URL" });
+        }
     } else {
         res.status(400).json({ error: "URL is required" });
     }
